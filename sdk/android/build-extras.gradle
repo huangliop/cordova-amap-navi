@@ -1,0 +1,14 @@
+repositories {
+    jcenter(){url 'http://jcenter.bintray.com/'}
+}
+android {
+    defaultConfig {
+        ndk {
+            abiFilters 'armeabi'
+        }
+    }
+}
+
+dependencies {
+    compile 'com.amap.api:navi-3dmap:6.9.1'
+}
