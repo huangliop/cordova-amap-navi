@@ -13,7 +13,7 @@
     <platform name="android">
         <config-file target="res/xml/config.xml" parent="/*">
             <feature name="AmapNavi">
-                <param name="android-package" value="com.hl.amap.AmapNavi" />
+                <param name="android-package" value="com.gd.amap.AmapNavi" />
             </feature>
         </config-file>
         <config-file target="AndroidManifest.xml" parent="/manifest/application">
@@ -21,6 +21,8 @@
             <activity android:name="com.amap.api.navi.AmapRouteActivity"
               android:theme="@android:style/Theme.NoTitleBar"
               android:configChanges="orientation|keyboardHidden|screenSize" />
+        </config-file>
+        <config-file target="AndroidManifest.xml" parent="/manifest">
             <!--用于访问网络，网络定位需要上网-->
             <uses-permission android:name="android.permission.INTERNET" />
             <!--写入扩展存储，向扩展卡写入数据，用于写入缓存定位数据-->
@@ -40,7 +42,7 @@
             <!--这个权限用于允许程序在手机屏幕关闭后后台进程仍然运行-->
             <uses-permission android:name="android.permission.WAKE_LOCK"/>
         </config-file>
-        <source-file src="src/android/AmapNavi.java" target-dir="src/com/hl/amap" />
+        <source-file src="src/android/AmapNavi.java" target-dir="src/com/gd/amap" />
         <framework src="sdk/android/build-extras.gradle" custom="true" type="gradleReference" />
     </platform>
 </plugin>

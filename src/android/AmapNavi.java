@@ -1,12 +1,17 @@
-package com.hl.amap;
+package com.gd.amap;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
+import android.util.Log;
 import android.view.View;
 
+import com.amap.api.maps.model.LatLng;
+import com.amap.api.maps.model.Poi;
 import com.amap.api.navi.AmapNaviPage;
 import com.amap.api.navi.AmapNaviParams;
+import com.amap.api.navi.AmapNaviType;
 import com.amap.api.navi.INaviInfoCallback;
+import com.amap.api.navi.model.AMapCarInfo;
 import com.amap.api.navi.model.AMapNaviLocation;
 
 import org.apache.cordova.CordovaPlugin;
@@ -14,8 +19,11 @@ import org.apache.cordova.CallbackContext;
 import org.apache.cordova.PluginResult;
 import org.json.JSONArray;
 import org.json.JSONException;
+import org.json.JSONObject;
 
-import io.cordova.hellocordova.MainActivity;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.apache.cordova.camera.CameraLauncher.PERMISSION_DENIED_ERROR;
 
@@ -30,9 +38,16 @@ public class AmapNavi extends CordovaPlugin implements INaviInfoCallback {
     @Override
     public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
         this.callbackContext=callbackContext;
-        if ("startNavi".equals(action)) {
-            this.requsetPermission(LOCATION);
-            AmapNaviPage.getInstance().showRouteActivity(this.cordova.getContext(), new AmapNaviParams(null), this);
+        if ("startNavi".equals(action)) {//开始导航
+            Poi start =args.isNull(0)?null:jsonToPoi(args.getJSONObject(0));
+            List<Poi> list=args.isNull(1)?null:jsonToPoiList(args.getJSONArray(1));
+            Poi end =args.isNull(2)?null:jsonToPoi(args.getJSONObject(2));
+            AmapNaviParams params=new AmapNaviParams(start, list, end, AmapNaviType.DRIVER);
+            AMapCarInfo info=args.isNull(3)?null:jsonToCarInfo(args.getJSONObject(3));
+            if(info!=null){
+                params.setCarInfo(info);
+            }
+            AmapNaviPage.getInstance().showRouteActivity(this.cordova.getContext(), params,this);
 
             callbackContext.success();
             return true;
@@ -47,6 +62,7 @@ public class AmapNavi extends CordovaPlugin implements INaviInfoCallback {
             this.cordova.requestPermission(this,LOCATION_REQUEST_CODE,permission);
         }
     }
+
 
     @Override
     public void onRequestPermissionResult(int requestCode, String[] permissions, int[] grantResults) throws JSONException {
@@ -67,6 +83,66 @@ public class AmapNavi extends CordovaPlugin implements INaviInfoCallback {
         }
     }
 
+    /**
+     * json数据转换为Poi对象
+     * @param object
+     * @return
+     */
+    private Poi jsonToPoi(JSONObject object){
+        Poi p= null;
+        try {
+            String name=object.has("name")?object.getString("name"):null;
+            String poi=object.has("poiid")?object.getString("poiid"):null;
+            Long lat=object.has("lat")?object.getLong("lat"):null;
+            Long lng=object.has("lng")?object.getLong("lng"):null;
+            p = new Poi(name,new LatLng(lat,lng),poi);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return p;
+    }
+
+    /**
+     * 途径点转换
+     * @param object
+     * @return
+     */
+    private List<Poi> jsonToPoiList(JSONArray object){
+        List<Poi> list=new ArrayList<>();
+        for (int i = 0; i < object.length(); i++) {
+            try {
+                list.add(jsonToPoi(object.getJSONObject(i)));
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+        return list;
+    }
+
+    /**
+     * json对象转为AMapCarInfo对象
+     * @param object
+     * @return
+     */
+    private AMapCarInfo jsonToCarInfo(JSONObject object){
+        AMapCarInfo info=new AMapCarInfo();
+        try {
+            info.setCarType(object.has("carType")?object.getString("carType"):null);
+            info.setCarNumber(object.has("carNumber")?object.getString("carNumber"):null);
+            info.setVehicleSize(object.has("size")?object.getString("size"):null);
+            info.setVehicleLoad(object.has("load")?object.getString("load"):null);
+            info.setVehicleWeight(object.has("weight")?object.getString("weight"):null);
+            info.setVehicleLength(object.has("length")?object.getString("length"):null);
+            info.setVehicleWidth(object.has("width")?object.getString("width"):null);
+            info.setVehicleHeight(object.has("height")?object.getString("height"):null);
+            info.setVehicleAxis(object.has("axis")?object.getString("axis"):null);
+            info.setVehicleLoadSwitch(object.has("loadSwitch")&&object.getBoolean("loadSwitch"));
+            info.setRestriction(object.has("restriction")&&object.getBoolean("restriction"));
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return info;
+    }
 
     //------------------------INaviInfoCallback--method-----------------------
     @Override
@@ -93,6 +169,7 @@ public class AmapNavi extends CordovaPlugin implements INaviInfoCallback {
 
     @Override
     public void onStartNavi(int i) {
+        Log.d("Amap","onStartNavi");
     }
 
     @Override
