@@ -1,4 +1,4 @@
-package com.gd.amap;
+package com.gd.amap.navi;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
@@ -48,8 +48,9 @@ public class AmapNavi extends CordovaPlugin implements INaviInfoCallback {
                 params.setCarInfo(info);
             }
             AmapNaviPage.getInstance().showRouteActivity(this.cordova.getContext(), params,this);
-
-            callbackContext.success();
+            PluginResult result=new PluginResult(PluginResult.Status.OK);
+            result.setKeepCallback(true);
+            callbackContext.sendPluginResult(result);
             return true;
         }
         return false;
@@ -91,7 +92,7 @@ public class AmapNavi extends CordovaPlugin implements INaviInfoCallback {
     private Poi jsonToPoi(JSONObject object){
         Poi p= null;
         try {
-            String name=object.has("name")?object.getString("name"):null;
+            String name=object.has("eventType")?object.getString("eventType"):null;
             String poi=object.has("poiid")?object.getString("poiid"):null;
             Long lat=object.has("lat")?object.getLong("lat"):null;
             Long lng=object.has("lng")?object.getLong("lng"):null;
@@ -144,22 +145,50 @@ public class AmapNavi extends CordovaPlugin implements INaviInfoCallback {
         return info;
     }
 
+    private void updateInfo(JSONObject object){
+        if (callbackContext != null) {
+            PluginResult result = new PluginResult(PluginResult.Status.OK, object);
+            result.setKeepCallback(true);
+            callbackContext.sendPluginResult(result);
+        }
+    }
     //------------------------INaviInfoCallback--method-----------------------
     @Override
     public void onInitNaviFailure() {
-        if(this.callbackContext!=null){
-            this.callbackContext.error("startNavi failed");
+        JSONObject object=new JSONObject();
+        try {
+            object.put("eventType","initNaviFailure");
+        } catch (JSONException e) {
+            e.printStackTrace();
         }
+        updateInfo(object);
     }
 
     @Override
     public void onGetNavigationText(String s) {
-
+        JSONObject object=new JSONObject();
+        try {
+            object.put("eventType","navigationText");
+            object.put("data",s);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        updateInfo(object);
     }
 
     @Override
     public void onLocationChange(AMapNaviLocation aMapNaviLocation) {
-
+        JSONObject object=new JSONObject();
+        JSONObject location=new JSONObject();
+        try {
+            object.put("eventType","locationChange");
+            location.put("lat",aMapNaviLocation.getCoord().getLatitude());
+            location.put("lng",aMapNaviLocation.getCoord().getLongitude());
+            object.put("data",location);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        updateInfo(object);
     }
 
     @Override
@@ -169,7 +198,14 @@ public class AmapNavi extends CordovaPlugin implements INaviInfoCallback {
 
     @Override
     public void onStartNavi(int i) {
-        Log.d("Amap","onStartNavi");
+        JSONObject object=new JSONObject();
+        try {
+            object.put("eventType","startNavi");
+            object.put("data",i);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        updateInfo(object);
     }
 
     @Override
@@ -194,7 +230,14 @@ public class AmapNavi extends CordovaPlugin implements INaviInfoCallback {
 
     @Override
     public void onExitPage(int i) {
-
+        JSONObject object=new JSONObject();
+        try {
+            object.put("eventType","exitPage");
+            object.put("data",i);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        updateInfo(object);
     }
 
     @Override

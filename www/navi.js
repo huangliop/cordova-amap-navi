@@ -1,12 +1,13 @@
 
-var argscheck = require('cordova/argscheck');
-var channel = require('cordova/channel');
-var utils = require('cordova/utils');
 var exec = require('cordova/exec');
 var cordova = require('cordova');
 
 function Navi() {
     
+}
+
+function eventCallback(params) {
+    cordova.fireDocumentEvent("amapnavi",params);
 }
 /** 
  * 启动导航
@@ -15,7 +16,7 @@ function Navi() {
  * @param wayList [{name,lat,lng,poiid}...] 途径点列表
  * @param carInfo {carType,carNumber,size,load,weight,length,width,height,axis,loadSwitch,restriction} 车辆信息
  */
-Navi.prototype.startNavi=function ({start,wayList,end,carInfo},successCallback,errorCallback) {
-    exec(successCallback,errorCallback,"AmapNavi","startNavi",[start,wayList,end,carInfo]);
+Navi.prototype.startNavi=function ({start,wayList,end,carInfo}) {
+    exec(eventCallback,null,"AmapNavi","startNavi",[start,wayList,end,carInfo]);
 }
 module.exports = new Navi();

@@ -13,7 +13,7 @@
     <platform name="android">
         <config-file target="res/xml/config.xml" parent="/*">
             <feature name="AmapNavi">
-                <param name="android-package" value="com.gd.amap.AmapNavi" />
+                <param name="android-package" value="com.gd.amap.navi.AmapNavi" />
             </feature>
         </config-file>
         <config-file target="AndroidManifest.xml" parent="/manifest/application">
@@ -42,7 +42,7 @@
             <!--这个权限用于允许程序在手机屏幕关闭后后台进程仍然运行-->
             <uses-permission android:name="android.permission.WAKE_LOCK"/>
         </config-file>
-        <source-file src="src/android/AmapNavi.java" target-dir="src/com/gd/amap" />
+        <source-file src="src/android/AmapNavi.java" target-dir="src/com/gd/amap/navi" />
         <framework src="sdk/android/build-extras.gradle" custom="true" type="gradleReference" />
     </platform>
 </plugin>
