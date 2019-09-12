@@ -43,6 +43,14 @@
             <uses-permission android:name="android.permission.WAKE_LOCK"/>
         </config-file>
         <source-file src="src/android/AmapNavi.java" target-dir="src/com/gd/amap/navi" />
-        <framework src="sdk/android/build-extras.gradle" custom="true" type="gradleReference" />
+        <framework src="com.amap.api:navi-3dmap:latest.integration" />
+    </platform>
+    <platform name="ios">
+        <podspec>
+            <pods >
+                <pod name="AMapNavi" />
+            </pods>
+        </podspec>
+        <framework src="sdk/ios/AMapFoundationKit.framework" custom="true" />
     </platform>
 </plugin>
