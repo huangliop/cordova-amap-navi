@@ -47,6 +47,9 @@
     </platform>
     <platform name="ios">
         <podspec>
+            <config>
+                 <source url="https://github.com/CocoaPods/Specs.git"/>
+             </config>
             <pods >
                 <pod name="AMapNavi" />
             </pods>
