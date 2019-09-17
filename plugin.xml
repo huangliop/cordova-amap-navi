@@ -12,7 +12,7 @@
       <!-- android -->
     <platform name="android">
         <config-file target="res/xml/config.xml" parent="/*">
-            <feature name="Amap">
+            <feature name="AMap">
                 <param name="android-package" value="com.gd.amap.Amap" />
             </feature>
         </config-file>
@@ -42,6 +42,20 @@
         <framework src="com.amap.api:location:latest.integration" />
     </platform>
     <platform name="ios">
+        <config-file target="config.xml" parent="/*">
+            <feature name="AMap">
+                <param name="ios-package" value="CDVAMap"/>
+                <param name="onload" value="true" />
+            </feature>
+        </config-file>
+        <header-file src="src/ios/CDVAMap.h"/>
+        <source-file src="src/ios/CDVAMap.m"/>
+        <config-file target="*-Info.plist" parent="NSLocationAlwaysUsageDescription">
+            <string>部分功能需要使用系统定位服务，请允许</string>
+        </config-file>
+        <config-file target="*-Info.plist" parent="AMapKey">
+            <string>$IOS_KEY</string>
+        </config-file>
         <podspec>
             <config>
                  <source url="https://github.com/CocoaPods/Specs.git"/>
