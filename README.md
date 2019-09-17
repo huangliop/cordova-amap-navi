@@ -18,7 +18,9 @@
 
 参选详情请参见[https://lbs.amap.com/api/android-navi-sdk/guide/navi-component/use-navi-component](https://lbs.amap.com/api/android-navi-sdk/guide/navi-component/use-navi-component)
 
+## android缺少权限
 
+请配合这个插件获取权限[https://www.npmjs.com/package/cordova-plugin-android-permissions](https://www.npmjs.com/package/cordova-plugin-android-permissions)
 
 ### 普通导航
 
