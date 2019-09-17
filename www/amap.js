@@ -17,6 +17,6 @@ function eventCallback(params) {
  * @param carInfo {carType,carNumber,size,load,weight,length,width,height,axis,loadSwitch,restriction} 车辆信息
  */
 Navi.prototype.startNavi=function ({start,wayList,end,carInfo}) {
-    exec(eventCallback,null,"AmapNavi","startNavi",[start,wayList,end,carInfo]);
+    exec(eventCallback,null,"Amap","startNavi",[start,wayList,end,carInfo]);
 }
 module.exports = new Navi();

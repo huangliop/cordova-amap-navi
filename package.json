@@ -1,10 +1,10 @@
 {
-    "name": "cordova-amap-navi",
+    "name": "cordova-amap-navi-location",
     "version": "1.0.0",
     "description": "Cordova Amap Navigator Plugin",
     "types": "./types/index.d.ts",
     "cordova": {
-      "id": "cordova-amap-navi",
+      "id": "cordova-amap-navi-location",
       "platforms": [
         "android",
         "ios"

@@ -18,7 +18,7 @@
 ### 普通导航
 
 ```js
-window.amapNavi.startNavi({
+window.amap.startNavi({
     start: { 
             name: "北京站", lat: 39.904556, lng: 116.427231,poiid:"B000A83M61"
          }
@@ -38,7 +38,7 @@ window.amapNavi.startNavi({
 ### 货车导航
 
 ```js
-window.amapNavi.startNavi({
+window.amap.startNavi({
     start: { 
             name: "北京站", lat: 39.904556, lng: 116.427231,poiid:"B000A83M61"
          }

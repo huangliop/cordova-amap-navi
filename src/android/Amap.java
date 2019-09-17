@@ -1,4 +1,4 @@
-package com.gd.amap.navi;
+package com.gd.amap;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
@@ -30,7 +30,7 @@ import static org.apache.cordova.camera.CameraLauncher.PERMISSION_DENIED_ERROR;
 /**
 * This class echoes a string called from JavaScript.
 */
-public class AmapNavi extends CordovaPlugin implements INaviInfoCallback {
+public class Amap extends CordovaPlugin implements INaviInfoCallback {
     private static final String LOCATION = Manifest.permission.ACCESS_FINE_LOCATION;
     private static final int LOCATION_REQUEST_CODE=874;
     private CallbackContext callbackContext;
