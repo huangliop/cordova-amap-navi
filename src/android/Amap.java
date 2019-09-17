@@ -2,9 +2,12 @@ package com.gd.amap;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
-import android.util.Log;
 import android.view.View;
 
+import com.amap.api.location.AMapLocation;
+import com.amap.api.location.AMapLocationClient;
+import com.amap.api.location.AMapLocationClientOption;
+import com.amap.api.location.AMapLocationListener;
 import com.amap.api.maps.model.LatLng;
 import com.amap.api.maps.model.Poi;
 import com.amap.api.navi.AmapNaviPage;
@@ -22,23 +25,32 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
-import static org.apache.cordova.camera.CameraLauncher.PERMISSION_DENIED_ERROR;
 
 /**
 * This class echoes a string called from JavaScript.
 */
-public class Amap extends CordovaPlugin implements INaviInfoCallback {
+public class Amap extends CordovaPlugin implements INaviInfoCallback , AMapLocationListener {
     private static final String LOCATION = Manifest.permission.ACCESS_FINE_LOCATION;
     private static final int LOCATION_REQUEST_CODE=874;
-    private CallbackContext callbackContext;
+    private CallbackContext naviCallbackContext;
+    private CallbackContext locationCallbackContext;
+    //是否为只定位一次的模式
+    private boolean isLocationOnce;
+
+    //声明AMapLocationClient类对象
+    public AMapLocationClient mLocationClient = null;
+
+
 
     @Override
     public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
-        this.callbackContext=callbackContext;
         if ("startNavi".equals(action)) {//开始导航
+            this.naviCallbackContext=callbackContext;
             Poi start =args.isNull(0)?null:jsonToPoi(args.getJSONObject(0));
             List<Poi> list=args.isNull(1)?null:jsonToPoiList(args.getJSONArray(1));
             Poi end =args.isNull(2)?null:jsonToPoi(args.getJSONObject(2));
@@ -53,36 +65,38 @@ public class Amap extends CordovaPlugin implements INaviInfoCallback {
             callbackContext.sendPluginResult(result);
             return true;
         }
+        if("getLocation".equals(action)){
+            //获取一次定位
+            startLocation(callbackContext,args.getJSONObject(0),true);
+            return  true;
+        }
+        if("startLocation".equals(action)){
+            //连续定位
+            startLocation(callbackContext,args.getJSONObject(0),false);
+            return  true;
+        }
+        if("stopLocation".equals(action)){
+            mLocationClient.stopLocation();
+            return  true;
+        }
         return false;
     }
 
-    private void requsetPermission(String permission){
-        if (!this.cordova.hasPermission(permission)){
-            return;
-        }else {
-            this.cordova.requestPermission(this,LOCATION_REQUEST_CODE,permission);
+
+    private void startLocation(CallbackContext callbackContext,JSONObject opt, boolean isOnce){
+        locationCallbackContext=callbackContext;
+        isLocationOnce=isOnce;
+        initLocation();
+        AMapLocationClientOption option = jsonToLocationOption(opt);
+        option.setOnceLocation(true);
+        if(null != mLocationClient){
+            mLocationClient.setLocationOption(option);
+            //设置场景模式后最好调用一次stop，再调用start以保证场景模式生效
+            mLocationClient.stopLocation();
+            mLocationClient.startLocation();
         }
     }
 
-
-    @Override
-    public void onRequestPermissionResult(int requestCode, String[] permissions, int[] grantResults) throws JSONException {
-        super.onRequestPermissionResult(requestCode, permissions, grantResults);
-        for(int r:grantResults)
-        {
-            if(r == PackageManager.PERMISSION_DENIED)
-            {
-                this.callbackContext.sendPluginResult(new PluginResult(PluginResult.Status.ERROR, PERMISSION_DENIED_ERROR));
-                return;
-            }
-        }
-        switch(requestCode)
-        {
-            case LOCATION_REQUEST_CODE:
-
-                break;
-        }
-    }
 
     /**
      * json数据转换为Poi对象
@@ -144,13 +158,88 @@ public class Amap extends CordovaPlugin implements INaviInfoCallback {
         }
         return info;
     }
+    private AMapLocationClientOption jsonToLocationOption(JSONObject object){
+        AMapLocationClientOption option=new AMapLocationClientOption();
 
-    private void updateInfo(JSONObject object){
-        if (callbackContext != null) {
-            PluginResult result = new PluginResult(PluginResult.Status.OK, object);
-            result.setKeepCallback(true);
-            callbackContext.sendPluginResult(result);
+        try {
+            if(object.has("purpose")){
+                option.setLocationPurpose(AMapLocationClientOption.AMapLocationPurpose.values()[object.getInt("purpose")]);
+            }
+            if (object.has("mode")){
+                option.setLocationMode(AMapLocationClientOption.AMapLocationMode.values()[object.getInt("mode")]);
+            }
+            if(object.has("interval")){
+                option.setInterval(object.getLong("interval"));
+            }
+            if(object.has("address")){
+                option.setNeedAddress(object.getBoolean("address"));
+            }
+            if(object.has("mock")){
+                option.setMockEnable(object.getBoolean("mock"));
+            }
+            if(object.has("timeout")){
+                option.setHttpTimeOut(object.getLong("timeout"));
+            }
+            if(object.has("cache")){
+                option.setLocationCacheEnable(object.getBoolean("cahe"));
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
         }
+        return option;
+    }
+
+    private void updateInfo(CallbackContext cb, JSONObject object,boolean keep){
+        if (cb != null) {
+            PluginResult result = new PluginResult(PluginResult.Status.OK, object);
+            result.setKeepCallback(keep);
+            cb.sendPluginResult(result);
+        }
+    }
+
+    private void initLocation(){
+        if(mLocationClient==null){
+            //初始化定位
+            mLocationClient = new AMapLocationClient(cordova.getActivity().getApplicationContext());
+            //设置定位回调监听
+            mLocationClient.setLocationListener(this);
+        }
+    }
+
+    private JSONObject locationToJSON(AMapLocation location){
+        JSONObject object=new JSONObject();
+        try {
+            object.put("lat",location.getLatitude());
+            object.put("lng",location.getLongitude());
+            object.put("acc",location.getAccuracy());
+            object.put("alt",location.getAltitude());
+            object.put("spe",location.getSpeed());
+            object.put("bea",location.getBearing());
+            object.put("bui",location.getBuildingId());
+            object.put("flo",location.getFloor());
+            object.put("add",location.getAddress());
+            object.put("cou",location.getCountry());
+            object.put("pro",location.getProvince());
+            object.put("cit",location.getCity());
+            object.put("dis",location.getDistrict());
+            object.put("str",location.getStreet());
+            object.put("strNum",location.getStreetNum());
+            object.put("citCode",location.getCityCode());
+            object.put("adc",location.getAdCode());
+            object.put("poi",location.getPoiName());
+            object.put("aoi",location.getAoiName());
+            object.put("gps",location.getGpsAccuracyStatus());
+            object.put("loc",location.getLocationType());
+            object.put("locD",location.getLocationDetail());
+            object.put("ecode",location.getErrorCode());
+            object.put("einfo",location.getErrorInfo());
+            SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            Date date = new Date(location.getTime());
+            object.put("tim",df.format(date));
+        }catch (JSONException e){
+            e.printStackTrace();
+        }
+        return  object;
     }
     //------------------------INaviInfoCallback--method-----------------------
     @Override
@@ -161,7 +250,7 @@ public class Amap extends CordovaPlugin implements INaviInfoCallback {
         } catch (JSONException e) {
             e.printStackTrace();
         }
-        updateInfo(object);
+        updateInfo(naviCallbackContext,object,true);
     }
 
     @Override
@@ -173,7 +262,7 @@ public class Amap extends CordovaPlugin implements INaviInfoCallback {
         } catch (JSONException e) {
             e.printStackTrace();
         }
-        updateInfo(object);
+        updateInfo(naviCallbackContext,object,true);
     }
 
     @Override
@@ -188,7 +277,7 @@ public class Amap extends CordovaPlugin implements INaviInfoCallback {
         } catch (JSONException e) {
             e.printStackTrace();
         }
-        updateInfo(object);
+        updateInfo(naviCallbackContext,object,true);
     }
 
     @Override
@@ -205,7 +294,7 @@ public class Amap extends CordovaPlugin implements INaviInfoCallback {
         } catch (JSONException e) {
             e.printStackTrace();
         }
-        updateInfo(object);
+        updateInfo(naviCallbackContext,object,true);
     }
 
     @Override
@@ -237,7 +326,7 @@ public class Amap extends CordovaPlugin implements INaviInfoCallback {
         } catch (JSONException e) {
             e.printStackTrace();
         }
-        updateInfo(object);
+        updateInfo(naviCallbackContext,object,true);
     }
 
     @Override
@@ -269,5 +358,36 @@ public class Amap extends CordovaPlugin implements INaviInfoCallback {
     public View getCustomMiddleView() {
         return null;
     }
+
     //--------------INaviInfoCallback----end-------------------
+    //--------------AMapLocationListener-----------------------
+    @Override
+    public void onLocationChanged(AMapLocation amapLocation) {
+        if(isLocationOnce){
+            if (amapLocation != null) {
+                if (amapLocation.getErrorCode() == 0) {
+                    locationCallbackContext.success(locationToJSON(amapLocation));
+                }else {
+                    locationCallbackContext.error(locationToJSON(amapLocation));
+                }
+            }else {
+                locationCallbackContext.error(0);
+            }
+            mLocationClient.stopLocation();
+            locationCallbackContext=null;
+        }else {
+            updateInfo(locationCallbackContext,locationToJSON(amapLocation),true);
+        }
+    }
+    //-------------AMapLocationListener--end------------------
+
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        if(mLocationClient!=null){
+            mLocationClient.onDestroy();
+            mLocationClient=null;
+        }
+    }
 }
