@@ -53,6 +53,12 @@
         <config-file target="*-Info.plist" parent="NSLocationAlwaysUsageDescription">
             <string>部分功能需要使用系统定位服务，请允许</string>
         </config-file>
+        <config-file target="*-Info.plist" parent="NSLocationAlwaysAndWhenInUseUsageDescription">
+            <string>部分功能需要使用系统定位服务，请允许</string>
+        </config-file>
+        <config-file target="*-Info.plist" parent="NSLocationWhenInUseUsageDescription">
+            <string>部分功能需要使用系统定位服务，请允许</string>
+        </config-file>
         <config-file target="*-Info.plist" parent="AMapKey">
             <string>$IOS_KEY</string>
         </config-file>
@@ -62,6 +68,7 @@
              </config>
             <pods >
                 <pod name="AMapNavi" />
+                <pod name="AMapLocation" />
             </pods>
         </podspec>
         <framework src="sdk/ios/AMapFoundationKit.framework" custom="true" />
