@@ -3,12 +3,19 @@
 #import <AMapFoundationKit/AMapFoundationKit.h>
 #import <AMapNaviKit/AMapNaviKit.h>
 
+@interface CDVAMap()<AMapNaviCompositeManagerDelegate>
+
+@property (nonatomic,strong) NSString *naviCallbackId;
+
+@end
+
 @implementation CDVAMap
 
 -(void)startNavi:(CDVInvokedUrlCommand *)command
 {
+    self.naviCallbackId=command.callbackId;
     self.compositeManager=[[AMapNaviCompositeManager alloc]init];
-//    self.compositeManager.delegate=self;
+    self.compositeManager.delegate=self;
     
     //导航组件配置类 since 5.2.0
     AMapNaviCompositeUserConfig *config = [[AMapNaviCompositeUserConfig alloc] init];
@@ -33,6 +40,7 @@
     if(info!=[NSNull null]){
         [config setVehicleInfo:[self jsonToInfo:info]];
     }
+    
     //启动
     [self.compositeManager presentRoutePlanViewControllerWithOptions:config];
 }
@@ -70,4 +78,64 @@
     info.axisNums = [[json objectForKey:@"axis"] integerValue];           //设置货车的轴数（用来计算过路费及限重）
     return  info;
 }
+
+-(void) updateInfo:(NSDictionary*) obj:(BOOL) keep:(NSString*) callbackId
+{
+    if(callbackId){
+        CDVPluginResult* result=[CDVPluginResult resultWithStatus:SWIFT_CDVCommandStatus_OK messageAsDictionary:obj];
+        [result setKeepCallbackAsBool:keep];
+        [self.commandDelegate sendPluginResult:result callbackId:callbackId];
+    }
+}
+#pragma mark - AMapNaviCompositeManagerDelegate
+
+- (void)compositeManager:(AMapNaviCompositeManager *_Nonnull)compositeManager didBackwardAction:(AMapNaviCompositeVCBackwardActionType)backwardActionType {
+    
+    NSMutableDictionary* obj=[NSMutableDictionary dictionary];
+    [obj setValue:@"exitPage" forKey:@"eventType"];
+    NSInteger t=backwardActionType;
+    [obj setValue:[NSNumber numberWithInteger:t]  forKey:@"data"];
+    [self updateInfo:obj :YES :self.naviCallbackId ];
+}
+
+- (void)compositeManager:(AMapNaviCompositeManager *)compositeManager onArrivedWayPoint:(int)wayPointIndex {
+    NSLog(@"途径点：%d",wayPointIndex);
+}
+
+- (void)compositeManager:(AMapNaviCompositeManager *)compositeManager error:(NSError *)error {
+    NSLog(@"error:{%ld - %@}", (long)error.code, error.localizedDescription);
+}
+
+- (void)compositeManagerOnCalculateRouteSuccess:(AMapNaviCompositeManager *)compositeManager {
+    NSLog(@"onCalculateRouteSuccess,%ld",(long)compositeManager.naviRouteID);
+}
+
+- (void)compositeManager:(AMapNaviCompositeManager *)compositeManager onCalculateRouteSuccessWithType:(AMapNaviRoutePlanType)type {
+    NSLog(@"=====  算路成功 %ld",type);
+}
+
+- (void)compositeManager:(AMapNaviCompositeManager *)compositeManager onCalculateRouteFailure:(NSError *)error {
+    NSLog(@"onCalculateRouteFailure error:{%ld - %@}", (long)error.code, error.localizedDescription);
+    
+}
+
+- (void)compositeManager:(AMapNaviCompositeManager *)compositeManager didStartNavi:(AMapNaviMode)naviMode {
+    NSMutableDictionary* obj=[NSMutableDictionary dictionary];
+    [obj setValue:@"startNavi" forKey:@"eventType"];
+    NSInteger mode=naviMode;
+    [obj setValue:[NSNumber numberWithInteger:mode]  forKey:@"data"];
+    [self updateInfo:obj :YES :self.naviCallbackId ];
+}
+
+-(void)compositeManager:(AMapNaviCompositeManager *)compositeManager updateNaviLocation:(AMapNaviLocation *)naviLocation
+{
+    NSMutableDictionary* obj=[NSMutableDictionary dictionary];
+    [obj setValue:@"locationChange" forKey:@"eventType"];
+    NSMutableDictionary *l=[NSMutableDictionary dictionary];
+    [l setValue:[NSNumber numberWithDouble:naviLocation.coordinate.latitude] forKey:@"lat"];
+    [l setValue:[NSNumber numberWithDouble:naviLocation.coordinate.longitude]  forKey:@"lng"];
+    [obj setValue:l  forKey:@"data"];
+    [self updateInfo:obj :YES :self.naviCallbackId ];
+}
 @end
+

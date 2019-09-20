@@ -62,6 +62,11 @@
         <config-file target="*-Info.plist" parent="AMapKey">
             <string>$IOS_KEY</string>
         </config-file>
+        <config-file target="*-Info.plist" parent="UIBackgroundModes">
+            <array>
+                <string>location</string>
+            </array>
+        </config-file>
         <podspec>
             <config>
                  <source url="https://github.com/CocoaPods/Specs.git"/>
