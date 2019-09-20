@@ -3,9 +3,13 @@
 #import <AMapFoundationKit/AMapFoundationKit.h>
 #import <AMapNaviKit/AMapNaviKit.h>
 
-@interface CDVAMap()<AMapNaviCompositeManagerDelegate>
+@interface CDVAMap ()<AMapNaviCompositeManagerDelegate,AMapLocationManagerDelegate>
 
 @property (nonatomic,strong) NSString *naviCallbackId;
+
+@property (nonatomic,strong) NSString *locationCallbackId;
+
+@property (nonatomic, copy) AMapLocatingCompletionBlock completionBlock;
 
 @end
 
@@ -44,9 +48,53 @@
     //启动
     [self.compositeManager presentRoutePlanViewControllerWithOptions:config];
 }
+-(void)getLocation:(CDVInvokedUrlCommand*) command
+{
+    [self initLocationManage];
+    NSDictionary* obj=command.arguments[0];
+    CLLocationAccuracy c=kCLLocationAccuracyHundredMeters;
+    int timeout=2;
+    if([[obj valueForKey:@"mode"] isEqual:[NSNumber numberWithInt:2]]){
+        c=kCLLocationAccuracyBest;
+        timeout=10;
+    }
+    [self.locationManager setDesiredAccuracy:c];
+    self.locationManager.locationTimeout =timeout;
+    self.locationManager.reGeocodeTimeout = timeout;
+    BOOL needAdd=NO;
+    if([obj valueForKey:@"address"]){
+        needAdd=YES;
+    }
+    self.locationCallbackId=command.callbackId;
+    [self.locationManager requestLocationWithReGeocode:needAdd completionBlock:self.completionBlock];
+}
+
+-(void)startLocation:(CDVInvokedUrlCommand*)command
+{
+    self.locationCallbackId=command.callbackId;
+    [self initLocationManage];
+    [self.locationManager setDelegate:self];
+    BOOL needAdd=NO;
+    NSDictionary* obj=command.arguments[0];
+    if([obj valueForKey:@"address"]){
+        needAdd=YES;
+    }
+    //设置允许连续定位逆地理
+    [self.locationManager setLocatingWithReGeocode:needAdd];
+    [self.locationManager startUpdatingLocation];
+}
+
+-(void)stopLocation:(CDVInvokedUrlCommand*)command
+{
+    if(self.locationManager){
+        [self.locationManager stopUpdatingLocation];
+        
+    }
+}
 -(void)pluginInitialize
 {
     [AMapServices sharedServices].apiKey=[self getAMapApiKey];
+    [self initCompleteBlock];
 }
 
 -(NSString *)getAMapApiKey{
@@ -79,13 +127,52 @@
     return  info;
 }
 
--(void) updateInfo:(NSDictionary*) obj:(BOOL) keep:(NSString*) callbackId
+-(void) updateInfo:(NSDictionary*) obj keep:(BOOL)keep callbackId:(NSString*)callbackId
 {
     if(callbackId){
         CDVPluginResult* result=[CDVPluginResult resultWithStatus:SWIFT_CDVCommandStatus_OK messageAsDictionary:obj];
         [result setKeepCallbackAsBool:keep];
         [self.commandDelegate sendPluginResult:result callbackId:callbackId];
     }
+}
+
+-(void) initLocationManage
+{
+    if(nil==self.locationManager){
+        self.locationManager=[[AMapLocationManager alloc] init];
+        //设置不允许系统暂停定位
+        [self.locationManager setPausesLocationUpdatesAutomatically:NO];
+        //设置允许在后台定位
+        [self.locationManager setAllowsBackgroundLocationUpdates:YES];
+    }
+}
+-(NSMutableDictionary*) locationToDictionary:(CLLocation *)location regeocode:(AMapLocationReGeocode*) regeocode
+{
+    NSMutableDictionary *d=[NSMutableDictionary dictionary];
+    [d setValue:[NSNumber numberWithDouble:location.coordinate.latitude] forKey:@"lat"];
+    [d setValue:[NSNumber numberWithDouble:location.coordinate.longitude] forKey:@"lng"];
+    if(regeocode){
+        [d setValue:regeocode.citycode forKey:@"citCode"];
+        [d setValue:regeocode.city forKey:@"cit"];
+        [d setValue:regeocode.formattedAddress  forKey:@"add"];
+        [d setValue:regeocode.country forKey:@"cou"];
+        [d setValue:regeocode.province forKey:@"pro"];
+        [d setValue:regeocode.district forKey:@"dis"];
+        [d setValue:regeocode.street forKey:@"str"];
+        [d setValue:regeocode.adcode forKey:@"adc"];
+        [d setValue:regeocode.POIName forKey:@"poi"];
+        [d setValue:regeocode.AOIName forKey:@"aoi"];
+        
+    }
+    return d;
+}
+- (void)stopLocation
+{
+    //停止定位
+    [self.locationManager stopUpdatingLocation];
+    
+    [self.locationManager setDelegate:nil];
+    
 }
 #pragma mark - AMapNaviCompositeManagerDelegate
 
@@ -95,7 +182,7 @@
     [obj setValue:@"exitPage" forKey:@"eventType"];
     NSInteger t=backwardActionType;
     [obj setValue:[NSNumber numberWithInteger:t]  forKey:@"data"];
-    [self updateInfo:obj :YES :self.naviCallbackId ];
+    [self updateInfo:obj keep:YES callbackId:self.naviCallbackId];
 }
 
 - (void)compositeManager:(AMapNaviCompositeManager *)compositeManager onArrivedWayPoint:(int)wayPointIndex {
@@ -124,7 +211,7 @@
     [obj setValue:@"startNavi" forKey:@"eventType"];
     NSInteger mode=naviMode;
     [obj setValue:[NSNumber numberWithInteger:mode]  forKey:@"data"];
-    [self updateInfo:obj :YES :self.naviCallbackId ];
+    [self updateInfo:obj keep:YES callbackId:self.naviCallbackId ];
 }
 
 -(void)compositeManager:(AMapNaviCompositeManager *)compositeManager updateNaviLocation:(AMapNaviLocation *)naviLocation
@@ -135,7 +222,69 @@
     [l setValue:[NSNumber numberWithDouble:naviLocation.coordinate.latitude] forKey:@"lat"];
     [l setValue:[NSNumber numberWithDouble:naviLocation.coordinate.longitude]  forKey:@"lng"];
     [obj setValue:l  forKey:@"data"];
-    [self updateInfo:obj :YES :self.naviCallbackId ];
+    [self updateInfo:obj keep:YES callbackId:self.naviCallbackId ];
 }
+
+#pragma mark - AMapLocationManager Delegate
+
+- (void)amapLocationManager:(AMapLocationManager *)manager didUpdateLocation:(CLLocation *)location reGeocode:(AMapLocationReGeocode *)reGeocode
+{
+    NSLog(@"location:{lat:%f; lon:%f; accuracy:%f; reGeocode:%@}", location.coordinate.latitude, location.coordinate.longitude, location.horizontalAccuracy, reGeocode.formattedAddress);
+    NSMutableDictionary *d=[self locationToDictionary:location regeocode:reGeocode];
+    [self updateInfo:d keep:YES callbackId:self.locationCallbackId ];
+}
+- (void)initCompleteBlock
+{
+    __weak CDVAMap *weakSelf = self;
+    self.completionBlock = ^(CLLocation *location, AMapLocationReGeocode *regeocode, NSError *error)
+    {
+        [weakSelf stopLocation];
+        if (error != nil && error.code == AMapLocationErrorLocateFailed)
+        {
+            //定位错误：此时location和regeocode没有返回值，不进行annotation的添加
+            NSLog(@"定位错误:{%ld - %@};", (long)error.code, error.userInfo);
+            NSMutableDictionary *d=[NSMutableDictionary dictionary];
+            [d setValue:[NSNumber numberWithLong:error.code] forKey:@"ecode"];
+            [d setValue:error.userInfo forKey:@"einfo"];
+            [weakSelf updateInfo:d keep:NO callbackId:weakSelf.locationCallbackId];
+            return;
+        }
+        else if (error != nil
+                 && (error.code == AMapLocationErrorReGeocodeFailed
+                     || error.code == AMapLocationErrorTimeOut
+                     || error.code == AMapLocationErrorCannotFindHost
+                     || error.code == AMapLocationErrorBadURL
+                     || error.code == AMapLocationErrorNotConnectedToInternet
+                     || error.code == AMapLocationErrorCannotConnectToHost))
+        {
+            //逆地理错误：在带逆地理的单次定位中，逆地理过程可能发生错误，此时location有返回值，regeocode无返回值，进行annotation的添加
+            NSLog(@"逆地理错误:{%ld - %@};", (long)error.code, error.userInfo);
+        }
+        else if (error != nil && error.code == AMapLocationErrorRiskOfFakeLocation)
+        {
+            //存在虚拟定位的风险：此时location和regeocode没有返回值，不进行annotation的添加
+            NSLog(@"存在虚拟定位的风险:{%ld - %@};", (long)error.code, error.userInfo);
+            
+            //存在虚拟定位的风险的定位结果
+            __unused CLLocation *riskyLocateResult = [error.userInfo objectForKey:@"AMapLocationRiskyLocateResult"];
+            //存在外接的辅助定位设备
+            __unused NSDictionary *externalAccressory = [error.userInfo objectForKey:@"AMapLocationAccessoryInfo"];
+            
+            NSMutableDictionary *d=[NSMutableDictionary dictionary];
+            [d setValue:[NSNumber numberWithLong:error.code] forKey:@"ecode"];
+            [d setValue:error.userInfo forKey:@"einfo"];
+            [weakSelf updateInfo:d keep:NO callbackId:weakSelf.locationCallbackId];
+            return;
+        }
+        else
+        {
+            //没有错误：location有返回值，regeocode是否有返回值取决于是否进行逆地理操作，进行annotation的添加
+        }
+        
+        NSMutableDictionary *d=[weakSelf locationToDictionary:location regeocode:regeocode];
+        [weakSelf updateInfo:d keep:NO callbackId:weakSelf.locationCallbackId ];
+    };
+}
+
 @end
 
