@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<plugin xmlns="http://apache.org/cordova/ns/plugins/1.0" id="cordova-plugin-amap" version="1.0.0">
-    <name>AmapNavigator</name>
+<plugin xmlns="http://apache.org/cordova/ns/plugins/1.0" id="cordova-plugin-amap-gd" version="1.0.0">
+    <name>Amap</name>
     <description>Cordova Amap Navigator Location Plugin</description>
     <license>Apache 2.0</license>
     <keywords>cordova,amp,naviagtor</keywords>
@@ -12,7 +12,7 @@
       <!-- android -->
     <platform name="android">
         <config-file target="res/xml/config.xml" parent="/*">
-            <feature name="AMap">
+            <feature name="Amap">
                 <param name="android-package" value="com.gd.amap.Amap" />
             </feature>
         </config-file>
@@ -43,7 +43,7 @@
     </platform>
     <platform name="ios">
         <config-file target="config.xml" parent="/*">
-            <feature name="AMap">
+            <feature name="Amap">
                 <param name="ios-package" value="CDVAMap"/>
                 <param name="onload" value="true" />
             </feature>

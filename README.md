@@ -1,4 +1,4 @@
-# cordova-plugin-amap
+# cordova-plugin-amap-gd
 
 高德导航和定位的cordova插件
 
@@ -12,7 +12,7 @@
 
 ## Install 
 
-`cordova plugin add https://github.com/huangliop/cordova-plugin-amap.git --variable ANDROID_KEY=key --variable IOS_KEY=key`
+`cordova plugin add cordova-plugin-amap-gd --variable ANDROID_KEY=key --variable IOS_KEY=key`
 
 ### iOS安装后build报错
 
