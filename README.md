@@ -76,8 +76,7 @@ window.amap.startNavi({
 ### 定位一次
 
 ```js
- window.amap.getLocation(options,location => {},location => {}
-                    );
+ window.amap.getLocation(options,location => {});
 ```
 ### 连续定位
 
@@ -88,15 +87,15 @@ window.amap.startLocation(options);
 
 ### 定位参数options说明
 
-|名称|说明|支持平台
-|--|--|--|
-|purpose|设置定位场景，目前支持三种场景（0=签到、1=出行、2=运动，默认无场景）|Android|
-|mode|定位模式：0=低功耗模式，1=设备定位模式，2=高精度模式|其中iOS支持2和0类型|
-|interval|连续定位时，定位的间隔|Android|
-|address|是否需要返回地址信息|Android，iOS|
-|mock|是否允许模拟软件Mock位置结果|Android|
-|timeout|定位的超时，默认30s（单位：毫秒）|Android|
-|cache|是否开启定位缓存机制|Android|
+|名称|类型|说明|支持平台
+|--|--|--|--|
+|purpose|int|设置定位场景，目前支持三种场景（0=签到、1=出行、2=运动，默认无场景）|Android|
+|mode|int|定位模式：0=低功耗模式，1=设备定位模式，2=高精度模式|其中iOS支持2和0类型|
+|interval|int|连续定位时，定位的间隔|Android|
+|address|boolean|是否需要返回地址信息|Android，iOS|
+|mock|boolean|是否允许模拟软件Mock位置结果|Android|
+|timeout|int|定位的超时，默认30s（单位：毫秒）|Android|
+|cache|int|是否开启定位缓存机制|Android|
 
 ### 定位返回的结果location说明
 
