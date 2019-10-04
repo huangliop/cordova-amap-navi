@@ -108,8 +108,8 @@ public class Amap extends CordovaPlugin implements INaviInfoCallback , AMapLocat
         try {
             String name=object.has("name")?object.getString("name"):null;
             String poi=object.has("poiid")?object.getString("poiid"):null;
-            Long lat=object.has("lat")?object.getLong("lat"):null;
-            Long lng=object.has("lng")?object.getLong("lng"):null;
+            Double lat=object.has("lat")?object.getDouble("lat"):null;
+            Double lng=object.has("lng")?object.getDouble("lng"):null;
             p = new Poi(name,new LatLng(lat,lng),poi);
         } catch (JSONException e) {
             e.printStackTrace();
