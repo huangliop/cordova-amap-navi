@@ -106,10 +106,10 @@ public class Amap extends CordovaPlugin implements INaviInfoCallback , AMapLocat
     private Poi jsonToPoi(JSONObject object){
         Poi p= null;
         try {
-            String name=object.has("name")?object.getString("name"):null;
+            String name=object.has("eventType")?object.getString("eventType"):null;
             String poi=object.has("poiid")?object.getString("poiid"):null;
-            Double lat=object.has("lat")?object.getDouble("lat"):null;
-            Double lng=object.has("lng")?object.getDouble("lng"):null;
+            Long lat=object.has("lat")?object.getLong("lat"):null;
+            Long lng=object.has("lng")?object.getLong("lng"):null;
             p = new Poi(name,new LatLng(lat,lng),poi);
         } catch (JSONException e) {
             e.printStackTrace();
@@ -357,6 +357,25 @@ public class Amap extends CordovaPlugin implements INaviInfoCallback , AMapLocat
     @Override
     public View getCustomMiddleView() {
         return null;
+    }
+    @Override
+    public void onNaviDirectionChanged(int i) {
+
+    }
+
+    @Override
+    public void onDayAndNightModeChanged(int i) {
+
+    }
+
+    @Override
+    public void onBroadcastModeChanged(int i) {
+
+    }
+
+    @Override
+    public void onScaleAutoChanged(boolean b) {
+
     }
 
     //--------------INaviInfoCallback----end-------------------
