@@ -50,12 +50,6 @@
         </config-file>
         <header-file src="src/ios/CDVAMap.h"/>
         <source-file src="src/ios/CDVAMap.m"/>
-        <config-file target="*-Info.plist" parent="NSLocationAlwaysUsageDescription">
-            <string>部分功能需要使用系统定位服务，请允许</string>
-        </config-file>
-        <config-file target="*-Info.plist" parent="NSLocationAlwaysAndWhenInUseUsageDescription">
-            <string>部分功能需要使用系统定位服务，请允许</string>
-        </config-file>
         <config-file target="*-Info.plist" parent="NSLocationWhenInUseUsageDescription">
             <string>部分功能需要使用系统定位服务，请允许</string>
         </config-file>
