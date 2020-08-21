@@ -116,7 +116,7 @@
     //设置车辆信息
     AMapNaviVehicleInfo *info = [[AMapNaviVehicleInfo alloc] init];
     info.vehicleId = [json objectForKey:@"carNumber"]; //设置车牌号
-    info.type = 1;                                                      //设置车辆类型,0:小车; 1:货车. 默认0(小车).
+    info.type = [[json objectForKey:@"carType"] integerValue];        //设置车辆类型,0:小车; 1:货车. 默认0(小车).
     info.size = [[json objectForKey:@"size"] integerValue];              //设置货车的类型(大小)
     info.width = [[json objectForKey:@"width"] floatValue];             //设置货车的宽度,范围:(0,5],单位：米
     info.height = [[json objectForKey:@"height"] floatValue];           //设置货车的高度,范围:(0,10],单位：米
