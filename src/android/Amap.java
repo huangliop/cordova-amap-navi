@@ -181,7 +181,7 @@ public class Amap extends CordovaPlugin implements INaviInfoCallback , AMapLocat
                 option.setHttpTimeOut(object.getLong("timeout"));
             }
             if(object.has("cache")){
-                option.setLocationCacheEnable(object.getBoolean("cahe"));
+                option.setLocationCacheEnable(object.getBoolean("cache"));
             }
         } catch (JSONException e) {
             e.printStackTrace();
