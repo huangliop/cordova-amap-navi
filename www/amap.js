@@ -19,7 +19,11 @@ function locationCallback(params){
  * @param wayList [{name,lat,lng,poiid}...] 途径点列表
  * @param carInfo {carType,carNumber,size,load,weight,length,width,height,axis,loadSwitch,restriction} 车辆信息
  */
-AMap.prototype.startNavi=function ({start,wayList,end,carInfo}) {
+AMap.prototype.startNavi=function (params) {
+    var start=params.start;
+    var wayList=params.wayList;
+    var end=params.end;
+    var carInfo=params.carInfo;
     exec(naviCallback,null,"Amap","startNavi",[start,wayList,end,carInfo]);
 }
 AMap.prototype.getLocation=function(option,successCallback,errorCallback){
