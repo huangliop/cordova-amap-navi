@@ -151,6 +151,11 @@
     NSMutableDictionary *d=[NSMutableDictionary dictionary];
     [d setValue:[NSNumber numberWithDouble:location.coordinate.latitude] forKey:@"lat"];
     [d setValue:[NSNumber numberWithDouble:location.coordinate.longitude] forKey:@"lng"];
+    [d setValue:[NSNumber numberWithDouble:location.horizontalAccuracy] forKey:@"acc"];
+    [d setValue:[NSNumber numberWithDouble:location.altitude] forKey:@"alt"];
+    [d setValue:[NSNumber numberWithDouble:location.speed] forKey:@"spe"];
+    [d setValue:[NSNumber numberWithDouble:location.floor] forKey:@"flo"];
+    [d setValue:[NSNumber numberWithDouble:location.course] forKey:@"bea"];
     if(regeocode){
         [d setValue:regeocode.citycode forKey:@"citCode"];
         [d setValue:regeocode.city forKey:@"cit"];
