@@ -154,7 +154,7 @@
     [d setValue:[NSNumber numberWithDouble:location.horizontalAccuracy] forKey:@"acc"];
     [d setValue:[NSNumber numberWithDouble:location.altitude] forKey:@"alt"];
     [d setValue:[NSNumber numberWithDouble:location.speed] forKey:@"spe"];
-    [d setValue:[NSNumber numberWithDouble:location.floor] forKey:@"flo"];
+    [d setValue:[NSNumber numberWithInteger:location.floor.level] forKey:@"flo"];
     [d setValue:[NSNumber numberWithDouble:location.course] forKey:@"bea"];
     if(regeocode){
         [d setValue:regeocode.citycode forKey:@"citCode"];
