@@ -9,6 +9,8 @@
 
 @property (nonatomic,strong) NSString *locationCallbackId;
 
+@property (nonatomic,strong) NSMutableArray* singleLocationCallbacks;
+
 @property (nonatomic, copy) AMapLocatingCompletionBlock completionBlock;
 
 @end
@@ -65,7 +67,10 @@
     if([obj valueForKey:@"address"]){
         needAdd=YES;
     }
-    self.locationCallbackId=command.callbackId;
+    if (!self.singleLocationCallbacks) {
+        self.singleLocationCallbacks=[NSMutableArray arrayWithCapacity:1];
+    }
+    [self.singleLocationCallbacks addObject:command.callbackId];
     [self.locationManager requestLocationWithReGeocode:needAdd completionBlock:self.completionBlock];
 }
 
@@ -116,7 +121,7 @@
     //设置车辆信息
     AMapNaviVehicleInfo *info = [[AMapNaviVehicleInfo alloc] init];
     info.vehicleId = [json objectForKey:@"carNumber"]; //设置车牌号
-    info.type = [[json objectForKey:@"carType"] integerValue];        //设置车辆类型,0:小车; 1:货车. 默认0(小车).
+    info.type =[[json objectForKey:@"carType"] integerValue];                                                      //设置车辆类型,0:小车; 1:货车. 默认0(小车).
     info.size = [[json objectForKey:@"size"] integerValue];              //设置货车的类型(大小)
     info.width = [[json objectForKey:@"width"] floatValue];             //设置货车的宽度,范围:(0,5],单位：米
     info.height = [[json objectForKey:@"height"] floatValue];           //设置货车的高度,范围:(0,10],单位：米
@@ -156,6 +161,7 @@
     [d setValue:[NSNumber numberWithDouble:location.speed] forKey:@"spe"];
     [d setValue:[NSNumber numberWithInteger:location.floor.level] forKey:@"flo"];
     [d setValue:[NSNumber numberWithDouble:location.course] forKey:@"bea"];
+
     if(regeocode){
         [d setValue:regeocode.citycode forKey:@"citCode"];
         [d setValue:regeocode.city forKey:@"cit"];
@@ -251,7 +257,13 @@
             NSMutableDictionary *d=[NSMutableDictionary dictionary];
             [d setValue:[NSNumber numberWithLong:error.code] forKey:@"ecode"];
             [d setValue:error.userInfo forKey:@"einfo"];
-            [weakSelf updateInfo:d keep:NO callbackId:weakSelf.locationCallbackId];
+            if (weakSelf.singleLocationCallbacks.count > 0) {
+                           for (NSString* callbackId in weakSelf.singleLocationCallbacks) {
+                               [weakSelf updateInfo:d keep:NO callbackId:callbackId];
+                               NSLog(@"error callbackId:%@",callbackId);
+                           }
+                           [weakSelf.singleLocationCallbacks removeAllObjects];
+                       }
             return;
         }
         else if (error != nil
@@ -278,7 +290,13 @@
             NSMutableDictionary *d=[NSMutableDictionary dictionary];
             [d setValue:[NSNumber numberWithLong:error.code] forKey:@"ecode"];
             [d setValue:error.userInfo forKey:@"einfo"];
-            [weakSelf updateInfo:d keep:NO callbackId:weakSelf.locationCallbackId];
+            if (weakSelf.singleLocationCallbacks.count > 0) {
+                for (NSString* callbackId in weakSelf.singleLocationCallbacks) {
+                    [weakSelf updateInfo:d keep:NO callbackId:callbackId];
+                    NSLog(@"callbackId:%@",callbackId);
+                }
+                [weakSelf.singleLocationCallbacks removeAllObjects];
+            }
             return;
         }
         else
@@ -287,9 +305,19 @@
         }
         
         NSMutableDictionary *d=[weakSelf locationToDictionary:location regeocode:regeocode];
-        [weakSelf updateInfo:d keep:NO callbackId:weakSelf.locationCallbackId ];
+        
+        if (weakSelf.singleLocationCallbacks.count > 0) {
+            for (NSString* callbackId in weakSelf.singleLocationCallbacks) {
+                [weakSelf updateInfo:d keep:NO callbackId:callbackId];
+                NSLog(@"callbackId:%@",callbackId);
+            }
+            [weakSelf.singleLocationCallbacks removeAllObjects];
+        }
     };
 }
-
+- (void)amapLocationManager:(AMapLocationManager *)manager doRequireLocationAuth:(CLLocationManager*)locationManager
+{
+    
+}
 @end
 
