@@ -1,6 +1,7 @@
 package com.gd.amap;
 
 import android.Manifest;
+import android.content.Context;
 import android.content.pm.PackageManager;
 import android.view.View;
 
@@ -106,10 +107,10 @@ public class Amap extends CordovaPlugin implements INaviInfoCallback , AMapLocat
     private Poi jsonToPoi(JSONObject object){
         Poi p= null;
         try {
-            String name=object.has("eventType")?object.getString("eventType"):null;
+            String name=object.has("name")?object.getString("name"):null;
             String poi=object.has("poiid")?object.getString("poiid"):null;
-            Long lat=object.has("lat")?object.getLong("lat"):null;
-            Long lng=object.has("lng")?object.getLong("lng"):null;
+            Double lat=object.has("lat")?object.getDouble("lat"):null;
+            Double lng=object.has("lng")?object.getDouble("lng"):null;
             p = new Poi(name,new LatLng(lat,lng),poi);
         } catch (JSONException e) {
             e.printStackTrace();
@@ -200,7 +201,14 @@ public class Amap extends CordovaPlugin implements INaviInfoCallback , AMapLocat
     private void initLocation(){
         if(mLocationClient==null){
             //初始化定位
-            mLocationClient = new AMapLocationClient(cordova.getActivity().getApplicationContext());
+            try {
+                Context c=cordova.getActivity().getApplicationContext();
+                AMapLocationClient.updatePrivacyShow(c,true,true);
+                AMapLocationClient.updatePrivacyAgree(c,true);
+                mLocationClient = new AMapLocationClient(c);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
             //设置定位回调监听
             mLocationClient.setLocationListener(this);
         }
@@ -358,6 +366,7 @@ public class Amap extends CordovaPlugin implements INaviInfoCallback , AMapLocat
     public View getCustomMiddleView() {
         return null;
     }
+
     @Override
     public void onNaviDirectionChanged(int i) {
 
